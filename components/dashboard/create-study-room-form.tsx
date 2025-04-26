@@ -10,6 +10,9 @@ interface FormData {
   name: string
   capacity: string
   description: string
+  date: string
+  location: string
+  mode: "online" | "offline" | "hybrid" | "" // Entry mode
   creator_id?: string // Optional field for manual entry
 }
 
@@ -19,6 +22,9 @@ export default function CreateStudyRoomForm() {
     name: "",
     capacity: "",
     description: "",
+    date: "",
+    location: "",
+    mode: "",
   })
   const [errors, setErrors] = useState<Partial<Record<keyof FormData | "general", string>>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -134,6 +140,16 @@ export default function CreateStudyRoomForm() {
       newErrors.capacity = "Capacity must be a positive number"
     }
 
+    if (!formData.date.trim()) {
+      newErrors.date = "Date is required"
+    }
+    if (!formData.location.trim()) {
+      newErrors.location = "Location is required"
+    }
+    if (!formData.mode) {
+      newErrors.mode = "Mode is required"
+    }
+
     // Check if we have a valid user ID
     if (userId === null && (!formData.creator_id || isNaN(Number(formData.creator_id)))) {
       newErrors.creator_id = "Valid user ID is required"
@@ -171,6 +187,9 @@ export default function CreateStudyRoomForm() {
         capacity: Number(formData.capacity),
         creator_id: creatorId,
         description: formData.description,
+        date: formData.date,
+        location: formData.location,
+        mode: formData.mode,
       }
 
       console.log("Sending study room data:", requestData)
@@ -210,6 +229,9 @@ export default function CreateStudyRoomForm() {
         name: "",
         capacity: "",
         description: "",
+        date: "",
+        location: "",
+        mode: "",
         creator_id: "",
       })
 
@@ -351,6 +373,53 @@ export default function CreateStudyRoomForm() {
           </div>
           {errors.capacity && <p className="mt-1 text-sm text-red-600">{errors.capacity}</p>}
           <p className="mt-1 text-xs text-gray-500">Maximum number of participants</p>
+        </div>
+
+        {/* Date */}
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date*</label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            className={`mt-1 block w-full rounded-md border ${errors.date ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm`}
+          />
+          {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
+        </div>
+
+        {/* Location */}
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location*</label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder="Room 101, Main Building, or Zoom Link"
+            className={`mt-1 block w-full rounded-md border ${errors.location ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm`}
+          />
+          {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+        </div>
+
+        {/* Mode */}
+        <div>
+          <label htmlFor="mode" className="block text-sm font-medium text-gray-700">Mode*</label>
+          <select
+            id="mode"
+            name="mode"
+            value={formData.mode}
+            onChange={handleChange}
+            className={`mt-1 block w-full rounded-md border ${errors.mode ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm`}
+          >
+            <option value="">Select mode</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+            <option value="hybrid">Hybrid</option>
+          </select>
+          {errors.mode && <p className="mt-1 text-sm text-red-600">{errors.mode}</p>}
         </div>
 
         {/* Manual User ID Entry */}
