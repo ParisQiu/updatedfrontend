@@ -277,7 +277,13 @@ export default function StudyRoomsList() {
                 <div className="flex items-center">
                   <Users className="mr-2 h-4 w-4 text-gray-400" />
                   <span className="text-sm text-gray-600">
-                    {room.participants || 0}/{room.capacity} participants
+                    {(() => {
+                      const joined = isRoomJoined(room.room_id);
+                      let count = room.participants || 0;
+                      // 如果 participants 字段没有包含当前用户，则 +1
+                      if (joined && count < room.capacity) count += 1;
+                      return `${count}/${room.capacity} participants`;
+                    })()}
                   </span>
                 </div>
                 <div className="flex items-center">

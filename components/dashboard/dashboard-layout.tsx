@@ -1,26 +1,8 @@
-"use client"
-
-import type React from "react"
-
-import { useState, useEffect } from "react"
+"use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import {
-  Bell,
-  Calendar,
-  ChevronDown,
-
-  HelpCircle,
-  Home,
-
-  LogOut,
-  Menu,
-  Search,
-  Settings,
-  User,
-  Users,
-  X,
-} from "lucide-react"
+import { Bell, Calendar, ChevronDown, HelpCircle, Home, LogOut, Menu, Search, Settings, User, Users, X } from "lucide-react"
 import Logo from "@/components/logo"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -277,7 +259,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="absolute right-0 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg">
                     <div className="border-b p-3">
                       <p className="text-sm font-medium">{username || "User"}</p>
-                      <p className="text-xs text-gray-500">student@example.com</p>
+                      <p className="text-xs text-gray-500">{typeof window !== 'undefined' && localStorage.getItem('email') || 'No email'}</p>
                     </div>
                     <div className="py-1">
                       <Link

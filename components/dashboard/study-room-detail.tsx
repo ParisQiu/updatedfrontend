@@ -1,10 +1,7 @@
-"use client"
-
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+"use client";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
@@ -18,7 +15,7 @@ import {
   Upload,
   Users,
   CheckCircle,
-} from "lucide-react"
+} from "lucide-react";
 
 interface StudyRoomParticipant {
   id: string
@@ -59,6 +56,7 @@ interface StudyRoom {
   duration: string
   capacity: number
   location: string
+  mode?: "online" | "offline" | "hybrid"
   participants: StudyRoomParticipant[]
   messages: StudyRoomMessage[]
   materials: StudyRoomMaterial[]
@@ -154,21 +152,21 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
         {
           id: "host-1",
           name: "Room Host",
-          avatar: "/mystical-forest-spirit.png",
+          avatar: "/default-profile-photo.jpg",
           role: "host",
           status: "online",
         },
         {
           id: "participant-1",
           name: "Alex Johnson",
-          avatar: "/mystical-forest-spirit.png",
+          avatar: "/default-profile-photo.jpg",
           role: "participant",
           status: "online",
         },
         {
           id: "participant-2",
           name: "Maria Garcia",
-          avatar: "/mystical-forest-spirit.png",
+          avatar: "/default-profile-photo.jpg",
           role: "participant",
           status: "away",
         },
@@ -177,8 +175,11 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
       // If backend provides participants, coerce their roles
       if (Array.isArray(basicData.participants)) {
         mockParticipants = basicData.participants.map((p: any) => ({
-          ...p,
+          id: p.id,
+          name: p.name,
+          avatar: p.avatar && !p.avatar.includes("mystical-forest") ? p.avatar : "/default-profile-photo.jpg",
           role: p.role === "host" ? "host" : "participant",
+          status: p.status || "online",
         })) as StudyRoomParticipant[];
       }
 
@@ -187,11 +188,22 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
         mockParticipants.push({
           id: userId,
           name: username,
-          avatar: "/mystical-forest-spirit.png",
+          avatar: "/default-profile-photo.jpg",
           role: "participant",
           status: "online",
         })
       }
+
+      // Apply persisted participant statuses
+      const persistedStatuses = JSON.parse(localStorage.getItem("participantStatuses") || "{}");
+      const roomKey = (basicData.id || basicData.room_id)?.toString();
+      const roomStatuses = persistedStatuses[roomKey] || {};
+      mockParticipants = mockParticipants.map(p => ({ ...p, status: roomStatuses[p.id] || p.status }));
+
+      // Apply persisted participant avatars
+      const persistedAvatars = JSON.parse(localStorage.getItem("participantAvatars") || "{}");
+      const roomAvatars = persistedAvatars[roomKey] || {};
+      mockParticipants = mockParticipants.map(p => ({ ...p, avatar: roomAvatars[p.id] || p.avatar }));
 
       // Create a complete mock room
       const mockRoom: StudyRoom = {
@@ -206,13 +218,14 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
         duration: basicData.duration || "2 hours",
         capacity: basicData.capacity || 10,
         location: basicData.location || "Online",
+        mode: basicData.mode || "online",
         participants: mockParticipants,
         messages: [
           {
             id: "msg-1",
             userId: "host-1",
             userName: "Room Host",
-            userAvatar: "/mystical-forest-spirit.png",
+            userAvatar: "/default-profile-photo.jpg",
             content: "Welcome to the study room! Feel free to ask questions.",
             timestamp: "10:30 AM",
           },
@@ -220,7 +233,7 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
             id: "msg-2",
             userId: "participant-1",
             userName: "Alex Johnson",
-            userAvatar: "/mystical-forest-spirit.png",
+            userAvatar: "/default-profile-photo.jpg",
             content: "Thanks for setting this up! I'm struggling with the concepts from chapter 5.",
             timestamp: "10:35 AM",
           },
@@ -272,7 +285,7 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
         {
           id: userId,
           name: username,
-          avatar: "/mystical-forest-spirit.png",
+          avatar: "/default-profile-photo.jpg",
           role: "participant",
           status: "online",
         },
@@ -362,7 +375,7 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
         id: `msg-${Date.now()}`,
         userId: userId,
         userName: username,
-        userAvatar: "/mystical-forest-spirit.png",
+        userAvatar: "/default-profile-photo.jpg",
         content: newMessage,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       }
@@ -510,6 +523,10 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
               <p className="text-sm font-medium">{room.location}</p>
             </div>
           </div>
+          <div className="flex items-center">
+            <span className="mr-2 text-gray-400">Mode:</span>
+            <span className="text-sm font-medium capitalize">{room.mode || "online"}</span>
+          </div>
         </div>
       </div>
 
@@ -517,16 +534,61 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold">Participants</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {room.participants.map((participant) => (
+          {room.participants.map((participant, idx) => (
             <div key={participant.id} className="flex items-center rounded-md border p-3">
               <div className="relative mr-3">
-                <img
-                  src={participant.avatar || "/placeholder.svg?height=40&width=40&query=avatar"}
-                  alt={participant.name}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
+                <div className="group relative">
+                  <img
+                    src={participant.avatar || "/default-profile-photo.jpg"}
+                    alt={participant.name}
+                    className="h-10 w-10 rounded-full object-cover cursor-pointer"
+                    onClick={() => {
+                      // Focus the hidden file input below
+                      const fileInput = document.getElementById(`avatar-file-${participant.id}`) as HTMLInputElement | null;
+                      if (fileInput) fileInput.click();
+                    }}
+                  />
+                  {/* Overlay for upload */}
+                  {((!room.id || String(room.id).startsWith("mock")) || participant.id === localStorage.getItem("userId")) && (
+                    <>
+                      <input
+                        id={`avatar-file-${participant.id}`}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = ev => {
+                            const updated = [...room.participants];
+                            const newAvatar = ev.target?.result as string;
+                            updated[idx] = { ...participant, avatar: newAvatar };
+                            setRoom({ ...room, participants: updated });
+                            // Persist avatar change
+                            const allAvatars = JSON.parse(localStorage.getItem("participantAvatars") || "{}");
+                            const rk = room.id.toString();
+                            const avatarMap = allAvatars[rk] || {};
+                            avatarMap[participant.id] = newAvatar;
+                            allAvatars[rk] = avatarMap;
+                            localStorage.setItem("participantAvatars", JSON.stringify(allAvatars));
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={() => {
+                          const fileInput = document.getElementById(`avatar-file-${participant.id}`) as HTMLInputElement | null;
+                          if (fileInput) fileInput.click();
+                        }}
+                      >
+                        <span className="text-xs text-white bg-black/60 rounded px-2 py-1">更换头像</span>
+                      </div>
+                    </>
+                  )}
+                </div>
                 <span
-                  className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border border-white ${
+                  className={`absolute bottom-0 right-0 z-10 h-3 w-3 rounded-full border border-white ${
                     participant.status === "online"
                       ? "bg-green-500"
                       : participant.status === "away"
@@ -542,9 +604,33 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
                     <span className="ml-1 text-xs text-blue-600">(You)</span>
                   )}
                 </p>
-                <p className="text-xs capitalize text-gray-500">
+                <p className="text-xs text-gray-500">
                   {participant.role === "host" ? "Host" : "Participant"}
                 </p>
+                {/* Allow status change if mock room or current user */}
+                {((!room.id || String(room.id).startsWith("mock")) || participant.id === localStorage.getItem("userId")) && (
+                  <select
+                    className="mt-2 block rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 focus:border-blue-500 focus:outline-none"
+                    value={participant.status}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as "online" | "away" | "offline"
+                      const updated = [...room.participants]
+                      updated[idx] = { ...participant, status: newStatus }
+                      setRoom({ ...room, participants: updated })
+                      // Persist status change
+                      const allStatuses = JSON.parse(localStorage.getItem("participantStatuses") || "{}");
+                      const roomKey = room.id.toString();
+                      const roomStatuses = allStatuses[roomKey] || {};
+                      roomStatuses[participant.id] = newStatus;
+                      allStatuses[roomKey] = roomStatuses;
+                      localStorage.setItem("participantStatuses", JSON.stringify(allStatuses));
+                    }}
+                  >
+                    <option value="online">Online</option>
+                    <option value="away">Away</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                )}
               </div>
             </div>
           ))}
@@ -589,7 +675,7 @@ export default function StudyRoomDetail({ roomId }: { roomId: string }) {
                     {room.messages.map((message) => (
                       <div key={message.id} className="flex">
                         <img
-                          src={message.userAvatar || "/placeholder.svg?height=40&width=40&query=avatar"}
+                          src={message.userAvatar || "/default-profile-photo.jpg"}
                           alt={message.userName}
                           className="mr-3 h-8 w-8 rounded-full object-cover"
                         />

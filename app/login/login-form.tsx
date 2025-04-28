@@ -56,6 +56,8 @@ export default function LoginForm() {
       // Save token and username
       localStorage.setItem("token", data.access_token)
       localStorage.setItem("username", data.user.username)
+      // Save email for profile display
+      localStorage.setItem("email", data.user.email || form.email)
 
       // Save user ID to localStorage
       if (data.user && data.user.id) {
