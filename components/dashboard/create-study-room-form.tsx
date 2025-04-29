@@ -11,6 +11,7 @@ interface FormData {
   capacity: string
   description: string
   date: string
+  time: string
   location: string
   mode: "online" | "offline" | "hybrid" | "" // Entry mode
   creator_id?: string // Optional field for manual entry
@@ -23,6 +24,7 @@ export default function CreateStudyRoomForm() {
     capacity: "",
     description: "",
     date: "",
+    time: "",
     location: "",
     mode: "",
   })
@@ -143,6 +145,9 @@ export default function CreateStudyRoomForm() {
     if (!formData.date.trim()) {
       newErrors.date = "Date is required"
     }
+    if (!formData.time.trim()) {
+      newErrors.time = "Time is required"
+    }
     if (!formData.location.trim()) {
       newErrors.location = "Location is required"
     }
@@ -188,6 +193,7 @@ export default function CreateStudyRoomForm() {
         creator_id: creatorId,
         description: formData.description,
         date: formData.date,
+        time: formData.time,
         location: formData.location,
         mode: formData.mode,
       }
@@ -230,6 +236,7 @@ export default function CreateStudyRoomForm() {
         capacity: "",
         description: "",
         date: "",
+        time: "",
         location: "",
         mode: "",
         creator_id: "",
@@ -387,6 +394,19 @@ export default function CreateStudyRoomForm() {
             className={`mt-1 block w-full rounded-md border ${errors.date ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm`}
           />
           {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
+        </div>
+        {/* Time */}
+        <div>
+          <label htmlFor="time" className="block text-sm font-medium text-gray-700">Time*</label>
+          <input
+            type="time"
+            id="time"
+            name="time"
+            value={formData.time}
+            onChange={handleChange}
+            className={`mt-1 block w-full rounded-md border ${errors.time ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm`}
+          />
+          {errors.time && <p className="mt-1 text-sm text-red-600">{errors.time}</p>}
         </div>
 
         {/* Location */}
